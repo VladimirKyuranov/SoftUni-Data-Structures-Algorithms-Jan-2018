@@ -1,137 +1,95 @@
-﻿using System;
-using System.Collections.Generic;
+using System;
+using System.Linq;
 
-public class BinaryHeap<T> where T : IComparable<T>
+class Bombs
 {
-    private List<T> heap;
-
-    public BinaryHeap()
+    static int[][] field;
+    static void Main(string[] args)
     {
-        this.heap = new List<T>();
-    }
+        int size = int.Parse(Console.ReadLine());
+        field = new int[size][];
+        ReadField();
+        string[] coords = Console.ReadLine()
+            .Split();
 
-    public int Count
-    {
-        get { return this.heap.Count; }
-    }
-
-    public void Insert(T item)
-    {
-        
-        this.heap.Add(item);
-        //this.HeapifyUp(item, this.heap.Count - 1);
-        this.HeapifyUpIterative(this.heap.Count - 1);
-    }
-
-    private void HeapifyUp(T item, int index)
-    {
-
-        int parent = (index - 1) / 2;
-        // Index is the child
-
-        if (parent < 0)
+        foreach (var coord in coords)
         {
-            return;
+            int[] coordArgs = coord
+                .Split(',')
+                .Select(int.Parse)
+                .ToArray();
+            int row = coordArgs[0];
+            int col = coordArgs[1];
+            BombCells(row, col);
         }
 
-        int compare = this.heap[parent].CompareTo(this.heap[index]);
+        PrintCellInfo();
+        PrintField();
+    }
 
-        if (compare < 0)
+    private static void BombCells(int row, int col)
+    {
+        int damage = field[row][col];
+
+        if (damage > 0)
         {
-            this.Swap(parent, index);
-            this.HeapifyUp(this.heap[parent], parent);
+            BombCell(row - 1, col - 1, damage);
+            BombCell(row - 1, col, damage);
+            BombCell(row - 1, col + 1, damage);
+            BombCell(row, col - 1, damage);
+            BombCell(row, col + 1, damage);
+            BombCell(row + 1, col - 1, damage);
+            BombCell(row + 1, col, damage);
+            BombCell(row + 1, col + 1, damage);
+            field[row][col] = 0;
+        }
+    }
+
+    private static void BombCell(int row, int col, int damage)
+    {
+        if (row >= 0 && row < field.Length &&
+            col >= 0 && col < field.Length &&
+            field[row][col] > 0)
+        {
+            field[row][col] -= damage;
+        }
+    }
+
+    static void ReadField()
+    {
+        for (int i = 0; i < field.Length; i++)
+        {
+            int[] row = Console.ReadLine()
+                .Split()
+                .Select(int.Parse)
+                .ToArray();
+            field[i] = row;
+        }
+    }
+
+    static void PrintField()
+    {
+        for (int row = 0; row < field.Length; row++)
+        {
+            Console.WriteLine(string.Join(" ", field[row]));
+        }
+    }
+
+    static void PrintCellInfo()
+    {
+        int aliveCellsCount = 0;
+        int aliveCellsSum = 0;
+
+        for (int row = 0; row < field.Length; row++)
+        {
+            int[] aliveCells = field[row]
+                .Where(x => x > 0)
+                .ToArray();
+            aliveCellsCount += aliveCells.Length;
+            aliveCellsSum += aliveCells.Sum();
         }
 
+        Console.WriteLine($"Alive cells: {aliveCellsCount}");
+        Console.WriteLine($"Sum: {aliveCellsSum}");
     }
-
-    private void HeapifyUpIterative(int index)
-    {
-
-        int childIndex = index;
-        T element = this.heap[childIndex];
-        int parentIndex = (childIndex - 1) / 2;
-        int compare = this.heap[parentIndex].CompareTo(element);
-
-        while (parentIndex >= 0 && compare < 0)
-        {
-            this.Swap(parentIndex, childIndex);
-            childIndex = parentIndex;
-            parentIndex = (parentIndex - 1) / 2;
-            if (childIndex == parentIndex)
-            {
-                break;
-            }
-        }
-
-    }
-
-    private void Swap(int parent, int index)
-    {
-        T temp = this.heap[parent];
-        this.heap[parent] = this.heap[index];
-        this.heap[index] = temp;
-    }
-
-    public T Peek()
-    {
-
-        if (this.heap.Count == 0)
-        {
-            throw new InvalidOperationException();
-        }
-
-        return this.heap[0];
-    }
-
-    public T Pull()
-    {
-
-        if (this.Count == 0)
-        {
-            throw new InvalidOperationException();
-        }
-
-        T element = this.heap[0];
-        this.Swap(0, this.Count - 1);
-        this.heap.RemoveAt(this.Count - 1);
-        this.HeapifyDown(0);
-
-        return element;
-    }
-
-    private void HeapifyDown(int index)
-    {
-
-        int parentIndex = index;
-
-        while (parentIndex < this.Count / 2)
-        {
-            //Left child
-            int childIndex = (parentIndex * 2) + 1;
-
-            //Check if there is right child && rightchild > leftChild
-            if (childIndex + 1 < this.Count && IsGreater(childIndex, childIndex + 1))
-            {
-                //Right Child ( LeftChild + 1)
-                childIndex += 1;
-            }
-
-            int compare = this.heap[parentIndex]
-                .CompareTo(this.heap[childIndex]);
-
-            if (compare < 0)
-            {
-                this.Swap(childIndex, parentIndex);
-            }
-            parentIndex = childIndex;
-        }
-
-    }
-
-    private bool IsGreater(int left, int right)
-    {
-        return this.heap[left].CompareTo(this.heap[right]) < 0;
-    }
-
-
 }
